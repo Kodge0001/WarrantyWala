@@ -1,0 +1,20 @@
+[
+  {
+    "id": "clm-9401",
+    "warrantyId": "ww-c0fac2",
+    "productName": "33013 XO7012BZV",
+    "brand": "POOJA ELECTRONICS",
+    "serialNumber": "IND223801898",
+    "invoiceNumber": "#25-26/476",
+    "purchaseDate": "2025-07-28",
+    "defectDescription": "Cooling unit stopped functioning, power indicator blinking red.",
+    "customerName": "Mr Anilkumar kodge",
+    "customerPhone": "9606069293",
+    "customerEmail": "anilkumar@warrantywala.ai",
+    "recipient": "poojaelectronics.care@escalations.com",
+    "status": "Escalated to Brand",
+    "estimatedTurnaround": "48 - 72 Hours",
+    "letter": "DATE: 16 August 2026\n\nTO:\nThe Customer Grievance & Warranty Support Desk\nPOOJA ELECTRONICS India Support Division\n\nSUBJECT: Formal Warranty Claim & Request for Immediate Redressal - 33013 XO7012BZV [#25-26/476]\n\nDear Support & Grievance Officer,\n\nI am writing to formally submit a warranty claim regarding my 33013 XO7012BZV, purchased on 2025-07-28 under Tax Invoice #25-26/476.\n\nISSUE DETAILS: Cooling unit stopped functioning, power indicator blinking red.\n\nUnder the provisions of the Consumer Protection Act (2019), I request immediate repair or replacement.",
+    "createdAt": "2026-08-16T18:30:00.000Z"
+  }
+]

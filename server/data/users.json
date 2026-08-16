@@ -1,0 +1,33 @@
+[
+  {
+    "id": "usr-8392",
+    "name": "Anilkumar Kodge",
+    "identifier": "anilkumar@warrantywala.ai",
+    "vaultId": "WW-8392",
+    "password": "vaultPass2026!",
+    "role": "Pro Vault Member",
+    "phone": "+91 9606069293",
+    "avatar": "https://api.dicebear.com/7.x/shapes/svg?seed=Anilkumar",
+    "createdAt": "2026-01-10T10:00:00.000Z"
+  },
+  {
+    "id": "usr-7225308f",
+    "name": "gamingfreace",
+    "identifier": "gamingfreace@gmail.com",
+    "vaultId": "WW-4604",
+    "password": "Gaming@123",
+    "role": "Pro Vault Member",
+    "avatar": "https://api.dicebear.com/7.x/shapes/svg?seed=gamingfreace@gmail.com",
+    "createdAt": "2026-08-16T18:37:57.034Z"
+  },
+  {
+    "id": "usr-fe9d2021",
+    "name": "anu",
+    "identifier": "anu@gmail.com",
+    "vaultId": "WW-3244",
+    "password": "Anu@12345",
+    "role": "Pro Vault Member",
+    "avatar": "https://api.dicebear.com/7.x/shapes/svg?seed=anu@gmail.com",
+    "createdAt": "2026-08-16T18:38:18.288Z"
+  }
+]
