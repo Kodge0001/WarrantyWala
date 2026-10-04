@@ -21,16 +21,8 @@ const getCustomerEmail = (req) => {
   ).toLowerCase().trim()
 }
 
-// Multer disk storage for uploaded receipt images
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads'))
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `receipt-${Date.now()}-${uuidv4().substring(0, 8)}${ext}`)
-  }
-})
+// Multer memory storage for uploaded receipt images (Vercel Serverless compatible)
+const storage = multer.memoryStorage()
 
 const upload = multer({
   storage,
@@ -120,7 +112,14 @@ router.post('/scan-receipt', upload.single('receipt'), async (req, res) => {
     const userEmail = getCustomerEmail(req)
     const file = req.file
     const originalname = file ? file.originalname : req.body.fileName || 'Sample Receipt'
-    const receiptUrl = file ? `/uploads/${file.filename}` : '/uploads/default-receipt.jpg'
+    let receiptUrl = '/uploads/default-receipt.jpg'
+    if (file) {
+      if (file.buffer) {
+        receiptUrl = `data:${file.mimetype || 'image/jpeg'};base64,${file.buffer.toString('base64')}`
+      } else if (file.filename) {
+        receiptUrl = `/uploads/${file.filename}`
+      }
+    }
 
     const extracted = await extractReceiptData(file, originalname)
 

@@ -66,7 +66,13 @@ export const extractReceiptData = async (file, originalname = '') => {
     let imageBuffer
     let mimeType = 'image/jpeg'
 
-    if (file && file.path) {
+    if (file && file.buffer) {
+      imageBuffer = file.buffer
+      const ext = path.extname(file.originalname || '').toLowerCase()
+      if (ext === '.png') mimeType = 'image/png'
+      else if (ext === '.webp') mimeType = 'image/webp'
+      else if (ext === '.pdf') mimeType = 'application/pdf'
+    } else if (file && file.path) {
       imageBuffer = await fs.readFile(file.path)
       const ext = path.extname(file.originalname || '').toLowerCase()
       if (ext === '.png') mimeType = 'image/png'
@@ -81,10 +87,10 @@ export const extractReceiptData = async (file, originalname = '') => {
     const base64Image = imageBuffer.toString('base64')
 
     const candidateModels = [
-      'gemini-3.7-flash',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-3.5-flash-lite'
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro'
     ]
 
     let response = null
@@ -249,7 +255,7 @@ export const handleAIChat = async ({ message, contextWarranties = [] }) => {
       ).join('\n')
 
       const response = await genai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: 'gemini-2.5-flash',
         contents: [{
           role: 'user',
           parts: [{
@@ -351,7 +357,7 @@ export const generateClaimLetter = async ({
   if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
     try {
       const response = await genai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: 'gemini-2.5-flash',
         contents: [{
           role: 'user',
           parts: [{
