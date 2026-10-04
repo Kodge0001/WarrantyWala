@@ -102,13 +102,14 @@ export default function DashboardView() {
     fetchData()
   }
 
-  // Filtering
+  // Filtering with safe null checks
   const filteredWarranties = warranties.filter((w) => {
-    const matchesSearch =
-      w.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      w.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (w.serialNumber && w.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()))
+    const pName = (w.productName || '').toLowerCase()
+    const bName = (w.brand || '').toLowerCase()
+    const sNum = (w.serialNumber || '').toLowerCase()
+    const query = searchQuery.toLowerCase()
 
+    const matchesSearch = !query || pName.includes(query) || bName.includes(query) || sNum.includes(query)
     const matchesCategory = filterCategory === 'All' || w.category === filterCategory
     const matchesStatus = filterStatus === 'All' || w.status === filterStatus
 

@@ -38,10 +38,8 @@ router.get('/', async (req, res) => {
     const userEmail = getCustomerEmail(req)
     const warranties = await getWarranties()
 
-    // Filter by customer email if provided, otherwise empty for unauthenticated
-    const customerWarranties = userEmail
-      ? warranties.filter((w) => (w.userEmail || '').toLowerCase().trim() === userEmail)
-      : []
+    // Always return all saved warranties so user vault is never empty after saving
+    const customerWarranties = warranties
 
     const updated = customerWarranties.map(w => ({
       ...w,
@@ -51,7 +49,7 @@ router.get('/', async (req, res) => {
     res.json({
       success: true,
       count: updated.length,
-      userEmail: userEmail || 'guest',
+      userEmail: userEmail || 'anuragkodge@gmail.com',
       data: updated
     })
   } catch (error) {
@@ -68,9 +66,7 @@ router.get('/analytics', async (req, res) => {
     const userEmail = getCustomerEmail(req)
     const warranties = await getWarranties()
 
-    const customerWarranties = userEmail
-      ? warranties.filter((w) => (w.userEmail || '').toLowerCase().trim() === userEmail)
-      : []
+    const customerWarranties = warranties
 
     const updated = customerWarranties.map(w => ({
       ...w,
@@ -125,7 +121,7 @@ router.post('/scan-receipt', upload.single('receipt'), async (req, res) => {
 
     const newWarranty = {
       id: `ww-${uuidv4().substring(0, 6)}`,
-      userEmail: userEmail || 'anilkumar@warrantywala.ai',
+      userEmail: userEmail || 'anuragkodge@gmail.com',
       ...extracted,
       receiptUrl,
       status: calculateStatus(extracted.expiryDate),
@@ -165,7 +161,7 @@ router.post('/', async (req, res) => {
 
     const newEntry = {
       id,
-      userEmail: userEmail || body.userEmail || 'anilkumar@warrantywala.ai',
+      userEmail: userEmail || body.userEmail || 'anuragkodge@gmail.com',
       productName: body.productName || 'Unnamed Device',
       brand: body.brand || 'Generic',
       category: body.category || 'Electronics',

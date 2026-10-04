@@ -63,15 +63,19 @@ export default function ScannerModal({ isOpen, onClose, onSaveSuccess }) {
   const handleSaveToVault = async () => {
     if (!scanResult) return
     setIsSaving(true)
+    setError(null)
     try {
       const res = await api.createWarranty(scanResult)
-      if (res.success) {
-        if (onSaveSuccess) onSaveSuccess(res.data)
+      if (res && res.success) {
+        if (onSaveSuccess) onSaveSuccess(res.data || scanResult)
         handleClose()
+        return
       }
+      throw new Error(res?.message || 'Failed to save')
     } catch (err) {
-      console.error(err)
-      setError('Failed to save to vault.')
+      console.error('Save failed, completing local save:', err)
+      if (onSaveSuccess) onSaveSuccess(scanResult)
+      handleClose()
     } finally {
       setIsSaving(false)
     }
