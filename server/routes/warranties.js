@@ -111,7 +111,7 @@ router.post('/scan-receipt', upload.single('receipt'), async (req, res) => {
   try {
     const userEmail = getCustomerEmail(req)
     const file = req.file
-    const originalname = file ? file.originalname : req.body.fileName || 'Sample Receipt'
+    const originalname = file?.originalname || req.body?.fileName || 'Sample Receipt'
     let receiptUrl = '/uploads/default-receipt.jpg'
     if (file) {
       if (file.buffer) {
