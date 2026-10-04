@@ -34,7 +34,7 @@ app.get('/api/health', (req, res) => {
     status: 'online',
     timestamp: new Date().toISOString(),
     service: 'WarrantyWala AI Core Backend (Vercel Serverless)',
-    version: '1.0.0'
+    version: '1.0.1'
   })
 })
 
