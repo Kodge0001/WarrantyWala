@@ -58,6 +58,16 @@ export default function DashboardView() {
     }
   }, [])
 
+  const calculateItemStatus = (expiryDateStr) => {
+    if (!expiryDateStr) return 'Active'
+    const now = new Date()
+    const expiry = new Date(expiryDateStr)
+    const diffDays = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24))
+    if (diffDays < 0) return 'Expired'
+    if (diffDays <= 30) return 'Expiring Soon'
+    return 'Active'
+  }
+
   const fetchData = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -66,8 +76,44 @@ export default function DashboardView() {
         api.getAnalytics(),
       ])
 
-      if (wResponse.success) setWarranties(wResponse.data)
-      if (aResponse.success) setAnalytics(aResponse.data)
+      let serverWarranties = wResponse.success ? wResponse.data : []
+      let customWarranties = []
+      try {
+        const raw = localStorage.getItem('warrantywala_custom_warranties')
+        if (raw) customWarranties = JSON.parse(raw)
+      } catch {
+        // ignore
+      }
+
+      // Merge custom saved warranties with server warranties
+      const combinedMap = new Map()
+      customWarranties.forEach((item) => {
+        if (item && item.id) combinedMap.set(item.id, { ...item, status: calculateItemStatus(item.expiryDate) })
+      })
+      serverWarranties.forEach((item) => {
+        if (item && item.id && !combinedMap.has(item.id)) {
+          combinedMap.set(item.id, { ...item, status: calculateItemStatus(item.expiryDate) })
+        }
+      })
+
+      const finalWarranties = Array.from(combinedMap.values())
+      setWarranties(finalWarranties)
+
+      if (aResponse.success) {
+        const totalVal = finalWarranties.reduce((acc, curr) => acc + (Number(curr.price) || 0), 0)
+        const activeC = finalWarranties.filter(w => w.status === 'Active').length
+        const expiringC = finalWarranties.filter(w => w.status === 'Expiring Soon').length
+        const expiredC = finalWarranties.filter(w => w.status === 'Expired').length
+
+        setAnalytics({
+          ...aResponse.data,
+          totalItems: finalWarranties.length,
+          totalProtectedValue: totalVal,
+          activeCount: activeC,
+          expiringCount: expiringC,
+          expiredCount: expiredC
+        })
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err)
     } finally {
@@ -87,19 +133,76 @@ export default function DashboardView() {
   const handleDeleteWarranty = async (id) => {
     if (!window.confirm('Remove this product from your warranty vault?')) return
     try {
-      const res = await api.deleteWarranty(id)
-      if (res.success) {
-        setWarranties(warranties.filter((w) => w.id !== id))
-        fetchData()
+      api.deleteWarranty(id).catch(() => {})
+      try {
+        const raw = localStorage.getItem('warrantywala_custom_warranties')
+        if (raw) {
+          const existing = JSON.parse(raw)
+          localStorage.setItem('warrantywala_custom_warranties', JSON.stringify(existing.filter((w) => w.id !== id)))
+        }
+      } catch {
+        // ignore
       }
+      setWarranties((prev) => {
+        const updated = prev.filter((w) => w.id !== id)
+        const totalVal = updated.reduce((acc, curr) => acc + (Number(curr.price) || 0), 0)
+        const activeC = updated.filter(w => w.status === 'Active').length
+        const expiringC = updated.filter(w => w.status === 'Expiring Soon').length
+        const expiredC = updated.filter(w => w.status === 'Expired').length
+
+        setAnalytics(prevAnalytics => ({
+          ...(prevAnalytics || {}),
+          totalItems: updated.length,
+          totalProtectedValue: totalVal,
+          activeCount: activeC,
+          expiringCount: expiringC,
+          expiredCount: expiredC
+        }))
+        return updated
+      })
     } catch (err) {
       console.error('Delete failed:', err)
     }
   }
 
   const handleNewItemAdded = (newItem) => {
-    setWarranties([newItem, ...warranties])
-    fetchData()
+    if (!newItem) return
+    const formattedItem = {
+      ...newItem,
+      id: newItem.id || `ww-${Math.floor(100000 + Math.random() * 900000)}`,
+      productName: newItem.productName || 'Scanned Receipt Product',
+      brand: newItem.brand || 'Scanned Brand',
+      category: newItem.category || 'Electronics',
+      status: calculateItemStatus(newItem.expiryDate),
+      price: Number(newItem.price || newItem.totalAmount) || 0,
+    }
+
+    try {
+      const raw = localStorage.getItem('warrantywala_custom_warranties')
+      const existing = raw ? JSON.parse(raw) : []
+      const updatedCustom = [formattedItem, ...existing.filter((w) => w.id !== formattedItem.id)]
+      localStorage.setItem('warrantywala_custom_warranties', JSON.stringify(updatedCustom))
+    } catch {
+      // ignore
+    }
+
+    setWarranties((prev) => {
+      const updated = [formattedItem, ...prev.filter((w) => w.id !== formattedItem.id)]
+      const totalVal = updated.reduce((acc, curr) => acc + (Number(curr.price) || 0), 0)
+      const activeC = updated.filter(w => w.status === 'Active').length
+      const expiringC = updated.filter(w => w.status === 'Expiring Soon').length
+      const expiredC = updated.filter(w => w.status === 'Expired').length
+
+      setAnalytics(prevAnalytics => ({
+        ...(prevAnalytics || {}),
+        totalItems: updated.length,
+        totalProtectedValue: totalVal,
+        activeCount: activeC,
+        expiringCount: expiringC,
+        expiredCount: expiredC
+      }))
+      return updated
+    })
   }
 
   // Filtering with safe null checks
