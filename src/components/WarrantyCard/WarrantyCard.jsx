@@ -33,6 +33,48 @@ export default function WarrantyCard({ item, onClaimClick, onDeleteClick }) {
 
   const daysLeftStr = calculateDaysLeft(item.expiryDate)
 
+  const handleOpenReceipt = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!item.receiptUrl) {
+      alert('No receipt document attached.')
+      return
+    }
+
+    try {
+      if (item.receiptUrl.startsWith('data:')) {
+        const parts = item.receiptUrl.split(';base64,')
+        const contentType = parts[0].replace('data:', '') || 'image/png'
+        const base64Data = parts[1]
+
+        const binaryStr = atob(base64Data)
+        const len = binaryStr.length
+        const bytes = new Uint8Array(len)
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i)
+        }
+        const blob = new Blob([bytes], { type: contentType })
+        const blobUrl = URL.createObjectURL(blob)
+
+        const win = window.open(blobUrl, '_blank')
+        if (!win) {
+          const a = document.createElement('a')
+          a.href = blobUrl
+          a.target = '_blank'
+          a.download = `${(item.productName || 'receipt').replace(/\s+/g, '_')}-invoice`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        }
+      } else {
+        window.open(item.receiptUrl, '_blank')
+      }
+    } catch (err) {
+      console.error('Error opening receipt:', err)
+      window.open(item.receiptUrl, '_blank')
+    }
+  }
+
   return (
     <motion.div
       className="warranty-card"
@@ -93,6 +135,11 @@ export default function WarrantyCard({ item, onClaimClick, onDeleteClick }) {
         <div className="card-store-row">
           <span className="store-label">🏪 Store:</span>
           <span className="store-name">{item.storeName}</span>
+          {item.storeGSTIN && (
+            <span className="gstin-badge" title="Verified GSTIN">
+              GSTIN: {item.storeGSTIN}
+            </span>
+          )}
           {item.totalTax > 0 && (
             <span className="gst-badge" title={`CGST: ₹${item.cgstAmount || 0} + SGST: ₹${item.sgstAmount || 0}`}>
               GST ₹{Number(item.totalTax).toLocaleString('en-IN')}
@@ -111,15 +158,14 @@ export default function WarrantyCard({ item, onClaimClick, onDeleteClick }) {
         </button>
 
         {item.receiptUrl && (
-          <a
-            href={item.receiptUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             className="btn-receipt-view"
+            onClick={handleOpenReceipt}
             title="View Original Receipt / Invoice"
           >
             <FileText size={14} /> Receipt
-          </a>
+          </button>
         )}
 
         <button

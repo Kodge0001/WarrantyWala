@@ -93,10 +93,10 @@ export const extractReceiptData = async (file, originalname = '') => {
     const base64Image = imageBuffer.toString('base64')
 
     const candidateModels = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
+      'gemini-3.8-flash',
+      'gemini-3.8-flash-lite',
+      'gemini-3.0-flash',
+      'gemini-2.5-flash'
     ]
 
     let response = null
@@ -104,36 +104,49 @@ export const extractReceiptData = async (file, originalname = '') => {
     let lastError = null
 
     for (const modelName of candidateModels) {
-      try {
-        console.log(`Attempting OCR extraction with ${modelName}...`)
-        response = await genai.models.generateContent({
-          model: modelName,
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  inlineData: {
-                    mimeType: mimeType,
-                    data: base64Image,
+      let attempts = 0
+      while (attempts < 3) {
+        try {
+          attempts++
+          console.log(`Attempting OCR extraction with ${modelName} (attempt ${attempts})...`)
+          response = await genai.models.generateContent({
+            model: modelName,
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: mimeType,
+                      data: base64Image,
+                    },
                   },
-                },
-                {
-                  text: RECEIPT_EXTRACTION_PROMPT,
-                },
-              ],
-            },
-          ],
-        })
-        if (response && response.text) {
-          usedModel = modelName
-          console.log(`Extraction successful with ${modelName}!`)
-          break
+                  {
+                    text: RECEIPT_EXTRACTION_PROMPT,
+                  },
+                ],
+              },
+            ],
+          })
+          if (response && response.text) {
+            usedModel = modelName
+            console.log(`Extraction successful with ${modelName}!`)
+            break
+          }
+        } catch (err) {
+          lastError = err
+          const errStr = String(err.message || err)
+          const isTransient = errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('429') || errStr.includes('demand')
+          if (isTransient && attempts < 3) {
+            console.warn(`Transient error on ${modelName} (attempt ${attempts}): ${errStr}. Retrying in 1.5s...`)
+            await new Promise((r) => setTimeout(r, 1500))
+          } else {
+            console.warn(`Model ${modelName} error (${errStr}), trying next candidate...`)
+            break
+          }
         }
-      } catch (err) {
-        lastError = err
-        console.warn(`Model ${modelName} error (${err.message || err}), trying next candidate...`)
       }
+      if (response && response.text) break
     }
 
     if (!response || !response.text) {
@@ -261,7 +274,7 @@ export const handleAIChat = async ({ message, contextWarranties = [] }) => {
       ).join('\n')
 
       const response = await genai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents: [{
           role: 'user',
           parts: [{
@@ -363,7 +376,7 @@ export const generateClaimLetter = async ({
   if (GEMINI_API_KEY) {
     try {
       const response = await genai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents: [{
           role: 'user',
           parts: [{
